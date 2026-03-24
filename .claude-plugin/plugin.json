@@ -1,0 +1,8 @@
+{
+  "name": "level-up",
+  "version": "1.0.0",
+  "description": "AI-powered technical tutor that creates personalized curricula, teaches interactively, assigns exercises, and reviews code — with persistent progress tracking.",
+  "author": {
+    "name": "Ketan"
+  }
+}

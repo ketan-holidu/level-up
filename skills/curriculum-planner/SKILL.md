@@ -1,0 +1,94 @@
+---
+name: curriculum-planner
+description: Builds structured learning curricula by searching official documentation and organizing topics into teachable modules with clear objectives, prerequisites, and exercises. Use this skill whenever the LevelUp instructor needs to create or regenerate a study plan for a technical topic. This skill should be triggered during the CURRICULUM_PLANNING state of the learning flow.
+---
+
+# Curriculum Planner
+
+You build structured, progressive curricula for technical topics. Your job is to research the topic thoroughly and produce a study plan that takes someone from fundamentals to practical competence.
+
+## Process
+
+### 1. Research the Topic
+
+Use WebSearch and WebFetch to find:
+- Official documentation and getting-started guides
+- The topic's core concepts and their dependency order
+- Common beginner pitfalls and misconceptions
+- Practical use cases that make good exercises
+
+Search for the topic's official docs first (e.g., "Kubernetes official documentation", "Go programming language tour"). Then look for well-regarded learning paths or tutorials to understand how others structure the material.
+
+Focus on primary sources — official docs, language specs, project wikis. These are more reliable than blog posts or opinion pieces.
+
+### 2. Design the Module Sequence
+
+Organize the material into 5-20 modules depending on the topic's breadth. A focused topic like CSS Grid might need only 5-6 modules, while a full programming language like Java or Rust might need 15-20. Use your judgment based on how much ground needs to be covered. Each module should:
+
+- **Build on the previous one** — no forward references to concepts not yet covered
+- **Be completable in one sitting** — roughly 20-40 minutes of teaching + exercise
+- **End with a hands-on exercise** — something the learner builds or modifies, not just reads
+- **Have clear learning objectives** — what the learner should be able to do after completing it
+
+The first module should be accessible to someone who knows how to program but has no experience with this specific topic. Don't waste time on "what is a computer" basics, but don't assume topic-specific knowledge either.
+
+The last module should involve a mini-project that ties together concepts from multiple earlier modules.
+
+### 3. Write the Curriculum
+
+Output a markdown document with this structure:
+
+```markdown
+# <Topic> Curriculum
+
+## Overview
+Brief description of what this curriculum covers and what the learner will be able to do upon completion.
+
+## Prerequisites
+What the learner should already know before starting.
+
+## Modules
+
+### Module 1: <Title>
+**Objectives:** What the learner will understand/be able to do after this module.
+**Key Concepts:** List of 3-5 core concepts covered.
+**Resources:** Links to relevant official documentation sections.
+**Exercise:** Brief description of the hands-on task.
+
+### Module 2: <Title>
+...
+```
+
+### 4. Calibrate Difficulty
+
+The progression should feel like a steady ramp, not a cliff. If a topic has a notorious difficulty spike (e.g., Kubernetes networking, Rust's borrow checker), split that area into smaller, more digestible modules rather than cramming it into one.
+
+Early modules should produce visible, satisfying results quickly. "Hello world" equivalents that work and that the learner can modify and experiment with. Save the theoretical deep-dives for after the learner has built some intuition through practice.
+
+### 5. Respect the Tool's Native Interface
+
+Every tool has a primary interface that practitioners use day-to-day. Teach the tool through that interface, not through the learner's preferred programming language.
+
+**The learner's preferred language applies to application code only** — the code that runs *inside* or *alongside* the tool (e.g., a Flask app deployed to Kubernetes, a Java service exporting Prometheus metrics, a Python script processing data).
+
+**The tool's native interface applies to tool interaction** — the commands, UI, DSL, or query language used to operate the tool itself.
+
+Examples:
+- **Kubernetes:** Teach with `kubectl` and YAML manifests. The learner's language (e.g., Python) is for the app *running in* the pods, not for a Kubernetes client library.
+- **Grafana:** Teach with the Grafana UI and PromQL/LogQL. The learner's language is for the service *exporting metrics*, not for Grafana's HTTP API.
+- **Terraform:** Teach with HCL. The learner's language is for any application code provisioned by Terraform.
+- **SQL/Databases:** Teach with SQL queries. The learner's language is for the application *connecting to* the database.
+- **Docker:** Teach with Dockerfile and `docker` CLI. The learner's language is for the app *inside* the container.
+
+When designing exercises, the hands-on task should use the tool's native interface as the primary activity. If the exercise also involves writing application code (e.g., "deploy a Flask app to Kubernetes"), that application code uses the learner's preferred language.
+
+## Quality Checklist
+
+Before delivering the curriculum, verify:
+- [ ] Modules are ordered by dependency (no concept used before it's introduced)
+- [ ] Every module has a concrete exercise, not just reading
+- [ ] The final module is a capstone that integrates earlier concepts
+- [ ] Resource links point to official/authoritative sources
+- [ ] Prerequisites are realistic and clearly stated
+- [ ] The module count matches the topic's breadth (5-6 for narrow topics, 15-20 for full languages/frameworks)
+- [ ] Modules teach the tool via its native interface, not via the learner's language SDK/client
