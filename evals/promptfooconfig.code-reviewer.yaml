@@ -1,0 +1,19 @@
+description: "LevelUp Plugin Skill Evals - Code Reviewer"
+
+providers:
+  - id: openai:chat:claude-4-sonnet
+    config:
+      apiBaseUrl: https://litellm-oidc.holidu.com/v1
+      max_tokens: 4096
+
+prompts:
+  - file://prompts/code-reviewer.txt
+
+defaultTest:
+  options:
+    provider:
+      id: openai:chat:claude-4-sonnet
+      config:
+        apiBaseUrl: https://litellm-oidc.holidu.com/v1
+
+tests: file://tests/code-reviewer.yaml

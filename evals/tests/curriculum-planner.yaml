@@ -1,0 +1,106 @@
+- description: "curriculum-planner-0: Java from scratch"
+  vars:
+    prompt: "I want to learn Java from scratch, never done any programming before"
+  assert:
+    - type: llm-rubric
+      value: |
+        12-20 module curriculum covering Java fundamentals through advanced topics,
+        with progressive hands-on exercises.
+
+- description: "curriculum-planner-1: PostgreSQL deep dive"
+  vars:
+    prompt: "teach me PostgreSQL — I know basic SQL from MySQL but want to go deep on Postgres-specific stuff"
+  assert:
+    - type: llm-rubric
+      value: |
+        8-12 module curriculum focused on Postgres-specific features (not generic SQL basics),
+        exercises should build practical DB skills.
+
+- description: "curriculum-planner-2: React for experienced web dev"
+  vars:
+    prompt: "I want to learn React, I already know HTML/CSS/JS pretty well"
+  assert:
+    - type: llm-rubric
+      value: |
+        8-12 module curriculum that skips web basics, starts with React concepts,
+        exercises build toward a real app.
+
+- description: "curriculum-planner-3: Spring Boot continuous project"
+  vars:
+    prompt: "build me a learning path for Spring Boot, I know Java basics"
+  assert:
+    - type: llm-rubric
+      value: |
+        10-15 module curriculum where exercises form a continuous project that grows
+        across modules — not isolated throwaway tasks.
+
+- description: "curriculum-planner-4: Rust from scratch"
+  vars:
+    prompt: "I want to learn Rust from scratch"
+  assert:
+    - type: llm-rubric
+      value: |
+        12-20 module curriculum with good progression from basics to ownership/borrowing
+        to advanced patterns.
+
+- description: "curriculum-planner-5: CSS Grid - narrow topic"
+  vars:
+    prompt: "teach me CSS Grid"
+  assert:
+    - type: llm-rubric
+      value: "5-8 module focused curriculum, concise, practical exercises."
+
+- description: "curriculum-planner-6: WebSockets - should ask language"
+  vars:
+    prompt: "I want to learn WebSockets"
+  assert:
+    - type: llm-rubric
+      value: |
+        Should ask which language the user is comfortable with before building curriculum.
+        Exercises should form a project that makes sense for WebSockets (e.g., real-time
+        chat, live dashboard). 8-12 modules.
+
+- description: "curriculum-planner-7: Grafana for intermediate user"
+  vars:
+    prompt: "teach me Grafana, I use it at work but only know the basics"
+  assert:
+    - type: llm-rubric
+      value: |
+        8-12 module curriculum focused on Grafana-specific features, skipping basics
+        the user already knows. Exercises should form a continuous monitoring project.
+
+- description: "curriculum-planner-8: Kubernetes uses kubectl not Python client"
+  vars:
+    prompt: "I want to learn Kubernetes, I know Python"
+  assert:
+    - type: llm-rubric
+      value: |
+        Curriculum teaches Kubernetes using kubectl and YAML manifests as the primary
+        interface — NOT the Python kubernetes client library. Exercises involve deploying
+        and managing apps via kubectl/YAML. Python is used only for the application code
+        running inside pods (e.g., a Flask app to deploy). Modules should cover pods,
+        deployments, services, configmaps, etc. using kubectl commands and YAML definitions.
+
+- description: "curriculum-planner-9: Grafana uses UI/PromQL not Java API"
+  vars:
+    prompt: "teach me Grafana, my preferred language is Java"
+  assert:
+    - type: llm-rubric
+      value: |
+        Curriculum teaches Grafana through the Grafana UI and PromQL/LogQL — NOT through
+        Java HTTP API calls to Grafana. Java is used only for building the application that
+        exports metrics (e.g., a Spring Boot service with Micrometer/Prometheus exporter).
+        Modules cover dashboards, panels, alerting, and data sources using the Grafana web
+        interface and query editors.
+
+- description: "curriculum-planner-10: Terraform uses HCL not Go SDK"
+  vars:
+    prompt: "I want to learn Terraform, I use Go for my projects"
+  assert:
+    - type: llm-rubric
+      value: |
+        Curriculum teaches Terraform using HCL (HashiCorp Configuration Language) and the
+        terraform CLI — NOT the Go Terraform SDK or CDK. Go is used only for any application
+        code that gets provisioned by Terraform (e.g., a Go web service deployed to the
+        infrastructure). Modules cover providers, resources, variables, state, modules, etc.
+        using HCL files and terraform plan/apply commands.

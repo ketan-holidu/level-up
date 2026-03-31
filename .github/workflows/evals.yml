@@ -1,0 +1,37 @@
+name: Skill Evals
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  evals:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        skill:
+          - code-reviewer
+          - topic-explainer
+          - curriculum-planner
+          - instructor
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run ${{ matrix.skill }} evals
+        run: npx -y promptfoo@latest eval -c "evals/promptfooconfig.${{ matrix.skill }}.yaml" -o "evals/results-${{ matrix.skill }}.json"
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PROMPTFOO_PASS_RATE_THRESHOLD: 70
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-results-${{ matrix.skill }}
+          path: evals/results-${{ matrix.skill }}.json

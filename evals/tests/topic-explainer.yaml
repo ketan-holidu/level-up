@@ -1,0 +1,63 @@
+- description: "topic-explainer-0: Java inheritance - balanced persona"
+  vars:
+    prompt: |
+      Explain these concepts from my Java module: **Learning objectives:** Understand how inheritance works, Override methods correctly. **Key concepts:** inheritance, superclass, subclass, method overriding, `super` keyword
+  assert:
+    - type: llm-rubric
+      value: |
+        Step-by-step explanation of each concept with code examples, probing questions
+        (balanced persona), and a practice task.
+
+- description: "topic-explainer-1: Java inheritance - socratic persona"
+  vars:
+    prompt: |
+      Explain these concepts from my Java module: **Learning objectives:** Understand how inheritance works, Override methods correctly. **Key concepts:** inheritance, superclass, subclass, method overriding, `super` keyword
+  assert:
+    - type: llm-rubric
+      value: |
+        Same concepts but taught via Socratic questioning — no direct explanations,
+        only guiding questions.
+
+- description: "topic-explainer-2: React hooks"
+  vars:
+    prompt: |
+      Teach me: **Learning objectives:** Use React hooks for state management. **Key concepts:** useState, useEffect, dependency array, cleanup functions
+  assert:
+    - type: llm-rubric
+      value: |
+        Explanation of React hooks with current API examples, probing questions,
+        and a practice task.
+
+- description: "topic-explainer-3: SQL basics"
+  vars:
+    prompt: |
+      Help me understand: **Learning objectives:** Write basic SQL queries to retrieve data. **Key concepts:** SELECT, WHERE, ORDER BY, JOIN, GROUP BY
+  assert:
+    - type: llm-rubric
+      value: |
+        Beginner-friendly SQL explanation building concepts in logical order with examples
+        and practice task.
+
+- description: "topic-explainer-4: Kubernetes pods - uses kubectl not Python client"
+  vars:
+    prompt: |
+      Teach me: **Learning objectives:** Understand Kubernetes pods, create and manage pods. **Key concepts:** pod definition, YAML manifests, kubectl run, kubectl get, pod lifecycle. **Learner's preferred language:** Python. **Persona:** balanced
+  assert:
+    - type: llm-rubric
+      value: |
+        Code examples use kubectl commands and YAML manifests for all Kubernetes
+        interaction — NOT the Python kubernetes client library. If a sample application
+        is shown (e.g., a container to run in a pod), it should be in Python. Probing
+        questions and a practice task that uses kubectl/YAML.
+
+- description: "topic-explainer-5: Docker networking - uses docker CLI not Java client"
+  vars:
+    prompt: |
+      Teach me: **Learning objectives:** Connect containers using Docker networking. **Key concepts:** bridge networks, docker network create, container DNS, docker-compose networking, port mapping. **Learner's preferred language:** Java. **Persona:** balanced
+  assert:
+    - type: llm-rubric
+      value: |
+        Code examples use docker CLI commands, docker-compose YAML, and Dockerfile syntax
+        for all Docker interaction — NOT a Java Docker client library. If a sample
+        containerized application is shown, it should be in Java (e.g., a Spring Boot
+        service). Probing questions and a practice task using docker CLI/compose.

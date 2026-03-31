@@ -1,0 +1,150 @@
+- description: "code-reviewer-0: Java BankAccount missing overdraft protection"
+  vars:
+    prompt: |
+      Review my exercise submission. **Exercise:** Write a Java class `BankAccount` with deposit, withdraw, and getBalance methods. Withdraw should prevent overdraft. **Persona:** balanced
+
+      ```java
+      public class BankAccount {
+          private double balance;
+
+          public BankAccount(double initialBalance) {
+              this.balance = initialBalance;
+          }
+
+          public void deposit(double amount) {
+              balance += amount;
+          }
+
+          public void withdraw(double amount) {
+              balance -= amount;
+          }
+
+          public double getBalance() {
+              return balance;
+          }
+      }
+      ```
+  assert:
+    - type: llm-rubric
+      value: |
+        Should catch the missing overdraft protection in withdraw().
+        Should praise correct structure and encapsulation.
+        Verdict: needs revision with a specific fix for the overdraft check.
+
+- description: "code-reviewer-1: React useEffect missing dependency"
+  vars:
+    prompt: |
+      Review my exercise submission. **Exercise:** Create a React component that fetches user data from an API on mount and displays it. Handle loading and error states. **Persona:** lecturer
+
+      ```jsx
+      import { useState, useEffect } from 'react';
+
+      function UserProfile({ userId }) {
+        const [user, setUser] = useState(null);
+        const [loading, setLoading] = useState(true);
+        const [error, setError] = useState(null);
+
+        useEffect(() => {
+          fetch(`/api/users/${userId}`)
+            .then(res => res.json())
+            .then(data => {
+              setUser(data);
+              setLoading(false);
+            })
+            .catch(err => {
+              setError(err.message);
+              setLoading(false);
+            });
+        }, []);
+
+        if (loading) return <p>Loading...</p>;
+        if (error) return <p>Error: {error}</p>;
+        return <div><h1>{user.name}</h1><p>{user.email}</p></div>;
+      }
+      ```
+  assert:
+    - type: llm-rubric
+      value: |
+        Should catch the missing userId dependency in useEffect.
+        Should praise the loading/error state handling.
+        Lecturer persona should give a detailed walkthrough of why the dependency array matters.
+        Verdict: needs revision.
+
+- description: "code-reviewer-2: Python CSV average - correct code"
+  vars:
+    prompt: |
+      Review my exercise submission. **Exercise:** Write a Python function that reads a CSV file and returns the average of a numeric column. **Persona:** drill-sergeant
+
+      ```python
+      import csv
+
+      def average_column(filepath, column_name):
+          with open(filepath, 'r') as f:
+              reader = csv.DictReader(f)
+              values = [float(row[column_name]) for row in reader]
+          return sum(values) / len(values)
+      ```
+  assert:
+    - type: llm-rubric
+      value: |
+        Code is correct and clean. Drill-sergeant should acknowledge it works, maybe note
+        the ZeroDivisionError on empty file but not belabor it. Verdict: pass. Terse tone.
+
+- description: "code-reviewer-3: Dockerfile missing requirements.txt - socratic"
+  vars:
+    prompt: |
+      Review my exercise submission. **Exercise:** Write a Dockerfile for a Python Flask app that serves on port 5000. **Persona:** socratic
+
+      ```dockerfile
+      FROM python:3.11
+      WORKDIR /app
+      COPY . .
+      RUN pip install flask
+      CMD ["python", "app.py"]
+      ```
+  assert:
+    - type: llm-rubric
+      value: |
+        Socratic style — should ask guiding questions like 'What happens to your other
+        dependencies?' and 'What's the difference between COPY . . at the start vs after
+        pip install?'. Should not state issues directly. Should guide toward requirements.txt
+        and layer caching.
+
+- description: "code-reviewer-4: SQL top 5 customers - correct"
+  vars:
+    prompt: |
+      Review my exercise submission. **Exercise:** Implement a SQL query that finds the top 5 customers by total order amount. **Persona:** balanced
+
+      ```sql
+      SELECT c.name, SUM(o.amount) AS total
+      FROM customers c
+      JOIN orders o ON c.id = o.customer_id
+      GROUP BY c.name
+      ORDER BY total DESC
+      LIMIT 5;
+      ```
+  assert:
+    - type: llm-rubric
+      value: |
+        This is correct. Should praise the clean JOIN, GROUP BY, and ORDER BY usage.
+        Might suggest minor improvements like aliasing or handling NULLs but verdict should be pass.
+
+- description: "code-reviewer-5: Go string reverse breaks on Unicode"
+  vars:
+    prompt: |
+      Review my exercise submission. **Exercise:** Write a Go function that reverses a string, handling Unicode correctly. **Persona:** balanced
+
+      ```go
+      func Reverse(s string) string {
+          reversed := ""
+          for i := len(s) - 1; i >= 0; i-- {
+              reversed += string(s[i])
+          }
+          return reversed
+      }
+      ```
+  assert:
+    - type: llm-rubric
+      value: |
+        Should catch that this reverses bytes not runes — will break on multi-byte Unicode
+        characters. Should explain the rune-based approach. Verdict: needs revision.

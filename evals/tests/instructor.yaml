@@ -1,0 +1,452 @@
+- description: "instructor-0: New topic with empty config"
+  vars:
+    prompt: "/levelUp:learn docker"
+    files_context: |
+      === plugin/levelUp/skills/config/config.json ===
+      []
+  assert:
+    - type: llm-rubric
+      value: |
+        Creates a well-formed config.json entry with all 4 fields (topic, workspace,
+        started_at, last_active). Proceeds to persona selection.
+
+- description: "instructor-1: Status with malformed config entry"
+  vars:
+    prompt: "/levelUp:status"
+    files_context: |
+      === plugin/levelUp/skills/config/config.json ===
+      [{"topic":"docker","workspace":"./docker/","started_at":"2026-03-20T10:00:00Z","last_active":"2026-03-20T12:00:00Z"},{"topic":"rust"}]
+
+      === docker/levelup_state/progress.json ===
+      {"topic":"docker","persona":"balanced","state":"TEACHING","current_module_index":1,"modules":[{"title":"Containers 101","status":"completed","summary":"Covered container basics."},{"title":"Images & Layers","status":"in_progress"}]}
+  assert:
+    - type: llm-rubric
+      value: |
+        Skips the malformed entry (missing workspace field), shows only the valid 'docker'
+        topic progress, and warns the user that one entry was skipped due to missing fields.
+
+- description: "instructor-2: Resume existing topic - no duplicate"
+  vars:
+    prompt: "/levelUp:learn docker"
+    files_context: |
+      === plugin/levelUp/skills/config/config.json ===
+      [{"topic":"docker","workspace":"./docker/","started_at":"2026-03-20T10:00:00Z","last_active":"2026-03-20T12:00:00Z"}]
+
+      === docker/levelup_state/progress.json ===
+      {"topic":"docker","persona":"balanced","state":"TEACHING","current_module_index":1,"modules":[{"title":"Containers 101","status":"completed"},{"title":"Images & Layers","status":"in_progress"}]}
+  assert:
+    - type: llm-rubric
+      value: |
+        Detects that docker already exists in config.json. Does NOT create a duplicate entry.
+        Resumes from current position (Module 2, TEACHING state).
+
+- description: "instructor-3: Repair malformed config entry"
+  vars:
+    prompt: "/levelUp:learn docker"
+    files_context: |
+      === plugin/levelUp/skills/config/config.json ===
+      [{"topic":"go","workspace":"./go/"}]
+
+      === go/levelup_state/progress.json ===
+      {"topic":"go","persona":"socratic","state":"EXERCISE","current_module_index":0,"modules":[{"title":"Go Basics","status":"in_progress"}]}
+  assert:
+    - type: llm-rubric
+      value: |
+        Detects malformed config.json entries. Repairs the 'go' entry by reading its
+        progress.json to reconstruct missing fields. Recognizes 'docker' is new and creates
+        a proper entry. Proceeds with docker topic setup.
+
+- description: "instructor-4: Review picks most recently active topic"
+  vars:
+    prompt: "/levelUp:review"
+    files_context: |
+      === plugin/levelUp/skills/config/config.json ===
+      [{"topic":"rust","workspace":"./rust/"},{"topic":"docker","workspace":"./docker/","started_at":"2026-03-18T10:00:00Z","last_active":"2026-03-19T10:00:00Z"},{"topic":"kubernetes","workspace":"./kubernetes/","started_at":"2026-03-20T10:00:00Z","last_active":"2026-03-22T14:00:00Z"}]
+
+      === kubernetes/levelup_state/progress.json ===
+      {"topic":"kubernetes","persona":"balanced","state":"EXERCISE","current_module_index":2,"modules":[{"title":"Pods","status":"completed"},{"title":"Services","status":"completed"},{"title":"Deployments","status":"in_progress"}]}
+  assert:
+    - type: llm-rubric
+      value: |
+        Selects 'kubernetes' as most recently active (comparing last_active timestamps).
+        Skips the 'rust' entry which is missing last_active. Does not crash or pick the wrong topic.
+
+- description: "instructor-5: Persona command with empty config"
+  vars:
+    prompt: "/levelUp:persona balanced"
+    files_context: |
+      === plugin/levelUp/skills/config/config.json ===
+      []
+  assert:
+    - type: llm-rubric
+      value: |
+        Tells the user no valid topic is active and suggests starting with /levelUp:learn <topic>.
+        Does not crash on empty config.
+
+- description: "instructor-6: TEACHING to EXERCISE transition"
+  vars:
+    prompt: "I've finished learning about containers, let's move on to the exercise."
+    files_context: |
+      === plugin/levelUp/skills/config/config.json ===
+      [{"topic":"docker","workspace":"./docker/","started_at":"2026-03-20T10:00:00Z","last_active":"2026-03-20T12:00:00Z"}]
+
+      === docker/levelup_state/progress.json ===
+      {"topic":"docker","persona":"balanced","language":"python","state":"TEACHING","current_module_index":0,"modules":[{"title":"Containers 101","status":"in_progress"},{"title":"Images & Layers","status":"upcoming"},{"title":"Volumes & Networking","status":"upcoming"}]}
+
+      === docker/levelup_state/curriculum.md ===
+      # Docker Curriculum
+
+      ## Modules
+
+      ### Module 1: Containers 101
+      **Objectives:** Understand what containers are, run and manage containers
+      **Key Concepts:** containers vs VMs, docker run, docker ps, docker stop
+      **Exercise:** Run an nginx container, map a port, verify it serves traffic
+
+      ### Module 2: Images & Layers
+      **Objectives:** Build custom images, understand layering
+      **Key Concepts:** Dockerfile, FROM, COPY, RUN, layer caching
+      **Exercise:** Write a Dockerfile for a Python Flask app
+
+      ### Module 3: Volumes & Networking
+      **Objectives:** Persist data, connect containers
+      **Key Concepts:** volumes, bind mounts, bridge networks, docker-compose networking
+      **Exercise:** Set up a multi-container app with persistent storage
+  assert:
+    - type: llm-rubric
+      value: |
+        Recognizes the user is done with the TEACHING phase. Transitions state from TEACHING
+        to EXERCISE in progress.json. Delegates to topic-explainer to assign a hands-on coding
+        task for Module 1 (Containers 101). Exercise should be scoped to container concepts.
+
+- description: "instructor-7: Review command during EXERCISE state"
+  vars:
+    prompt: "/levelUp:review"
+    files_context: |
+      === plugin/levelUp/skills/config/config.json ===
+      [{"topic":"docker","workspace":"./docker/","started_at":"2026-03-20T10:00:00Z","last_active":"2026-03-21T14:00:00Z"}]
+
+      === docker/levelup_state/progress.json ===
+      {"topic":"docker","persona":"drill-sergeant","language":"python","state":"EXERCISE","current_module_index":1,"modules":[{"title":"Containers 101","status":"completed","summary":"Covered containers vs VMs, docker run/ps/stop. Learner grasped isolation quickly."},{"title":"Images & Layers","status":"in_progress"},{"title":"Volumes & Networking","status":"upcoming"}]}
+
+      === docker/levelup_state/curriculum.md ===
+      # Docker Curriculum
+
+      ## Modules
+
+      ### Module 1: Containers 101
+      **Objectives:** Understand what containers are, run and manage containers
+      **Key Concepts:** containers vs VMs, docker run, docker ps, docker stop
+      **Exercise:** Run an nginx container, map a port, verify it serves traffic
+
+      ### Module 2: Images & Layers
+      **Objectives:** Build custom images, understand layering
+      **Key Concepts:** Dockerfile, FROM, COPY, RUN, layer caching
+      **Exercise:** Write a Dockerfile for a Python Flask app
+
+      ### Module 3: Volumes & Networking
+      **Objectives:** Persist data, connect containers
+      **Key Concepts:** volumes, bind mounts, bridge networks, docker-compose networking
+      **Exercise:** Set up a multi-container app with persistent storage
+  assert:
+    - type: llm-rubric
+      value: |
+        Detects the current state is EXERCISE. Asks the user for their code file path.
+        Upon receiving code, transitions state from EXERCISE to REVIEW. Delegates to
+        code-reviewer with the submitted code, exercise requirements from curriculum.md
+        (Module 2 exercise: write a Dockerfile for a Flask app), persona (drill-sergeant),
+        and previous module summaries.
+
+- description: "instructor-8: Inline code submission triggers review"
+  vars:
+    prompt: |
+      I'm done with the exercise, here's my code:
+
+      ```python
+      from flask import Flask
+      app = Flask(__name__)
+
+      @app.route('/')
+      def hello():
+          return 'Hello Docker!'
+
+      if __name__ == '__main__':
+          app.run(host='0.0.0.0', port=5000)
+      ```
+
+      And my Dockerfile:
+
+      ```dockerfile
+      FROM python:3.11-slim
+      WORKDIR /app
+      COPY requirements.txt .
+      RUN pip install -r requirements.txt
+      COPY . .
+      EXPOSE 5000
+      CMD ["python", "app.py"]
+      ```
+    files_context: |
+      === plugin/levelUp/skills/config/config.json ===
+      [{"topic":"docker","workspace":"./docker/","started_at":"2026-03-20T10:00:00Z","last_active":"2026-03-21T14:00:00Z"}]
+
+      === docker/levelup_state/progress.json ===
+      {"topic":"docker","persona":"balanced","language":"python","state":"EXERCISE","current_module_index":1,"modules":[{"title":"Containers 101","status":"completed","summary":"Covered containers vs VMs, docker run/ps/stop."},{"title":"Images & Layers","status":"in_progress"},{"title":"Volumes & Networking","status":"upcoming"}]}
+
+      === docker/levelup_state/curriculum.md ===
+      # Docker Curriculum
+
+      ## Modules
+
+      ### Module 1: Containers 101
+      **Objectives:** Understand what containers are, run and manage containers
+      **Key Concepts:** containers vs VMs, docker run, docker ps, docker stop
+      **Exercise:** Run an nginx container, map a port, verify it serves traffic
+
+      ### Module 2: Images & Layers
+      **Objectives:** Build custom images, understand layering
+      **Key Concepts:** Dockerfile, FROM, COPY, RUN, layer caching
+      **Exercise:** Write a Dockerfile for a Python Flask app
+
+      ### Module 3: Volumes & Networking
+      **Objectives:** Persist data, connect containers
+      **Key Concepts:** volumes, bind mounts, bridge networks, docker-compose networking
+      **Exercise:** Set up a multi-container app with persistent storage
+  assert:
+    - type: llm-rubric
+      value: |
+        Recognizes the user is signaling exercise completion without using /review.
+        Transitions state from EXERCISE to REVIEW. Delegates to code-reviewer with the
+        submitted code, exercise requirements (Dockerfile for Flask app), persona (balanced),
+        and Module 1 summary. Does NOT ask for a file path since code was provided inline.
+
+- description: "instructor-9: REVIEW to ADVANCE - next module"
+  vars:
+    prompt: "The review is done, my code passed. Let's continue."
+    files_context: |
+      === plugin/levelUp/skills/config/config.json ===
+      [{"topic":"docker","workspace":"./docker/","started_at":"2026-03-20T10:00:00Z","last_active":"2026-03-22T09:00:00Z"}]
+
+      === docker/levelup_state/progress.json ===
+      {"topic":"docker","persona":"drill-sergeant","language":"python","state":"REVIEW","current_module_index":1,"modules":[{"title":"Containers 101","status":"completed","summary":"Covered containers vs VMs, docker run/ps/stop. Learner grasped isolation quickly."},{"title":"Images & Layers","status":"in_progress"},{"title":"Volumes & Networking","status":"upcoming"}]}
+
+      === docker/levelup_state/curriculum.md ===
+      # Docker Curriculum
+
+      ## Modules
+
+      ### Module 1: Containers 101
+      **Objectives:** Understand what containers are, run and manage containers
+      **Key Concepts:** containers vs VMs, docker run, docker ps, docker stop
+      **Exercise:** Run an nginx container, map a port, verify it serves traffic
+
+      ### Module 2: Images & Layers
+      **Objectives:** Build custom images, understand layering
+      **Key Concepts:** Dockerfile, FROM, COPY, RUN, layer caching
+      **Exercise:** Write a Dockerfile for a Python Flask app
+
+      ### Module 3: Volumes & Networking
+      **Objectives:** Persist data, connect containers
+      **Key Concepts:** volumes, bind mounts, bridge networks, docker-compose networking
+      **Exercise:** Set up a multi-container app with persistent storage
+  assert:
+    - type: llm-rubric
+      value: |
+        Transitions from REVIEW to ADVANCE: records a module summary for Module 2
+        (Images & Layers), marks it as completed, increments current_module_index to 2,
+        sets state to TEACHING. Begins teaching Module 3 (Volumes & Networking) by
+        delegating to topic-explainer with drill-sergeant persona and previous module
+        summaries for continuity.
+
+- description: "instructor-10: Final module completion"
+  vars:
+    prompt: "The review is done, my code passed. Let's continue."
+    files_context: |
+      === plugin/levelUp/skills/config/config.json ===
+      [{"topic":"docker","workspace":"./docker/","started_at":"2026-03-20T10:00:00Z","last_active":"2026-03-23T16:00:00Z"}]
+
+      === docker/levelup_state/progress.json ===
+      {"topic":"docker","persona":"balanced","language":"python","state":"REVIEW","current_module_index":2,"modules":[{"title":"Containers 101","status":"completed","summary":"Covered containers vs VMs, docker run/ps/stop."},{"title":"Images & Layers","status":"completed","summary":"Built custom images, understood layer caching."},{"title":"Volumes & Networking","status":"in_progress"}]}
+
+      === docker/levelup_state/curriculum.md ===
+      # Docker Curriculum
+
+      ## Modules
+
+      ### Module 1: Containers 101
+      **Objectives:** Understand what containers are
+      **Exercise:** Run nginx container
+
+      ### Module 2: Images & Layers
+      **Objectives:** Build custom images
+      **Exercise:** Write a Dockerfile
+
+      ### Module 3: Volumes & Networking
+      **Objectives:** Persist data, connect containers
+      **Exercise:** Multi-container app with persistent storage
+  assert:
+    - type: llm-rubric
+      value: |
+        This is the final module (Module 3). Transitions from REVIEW to ADVANCE: records
+        module summary, marks Module 3 as completed. All modules are now done. Congratulates
+        the learner and summarizes their full journey across all 3 modules. Does NOT try to
+        advance to a non-existent Module 4.
+
+- description: "instructor-11: Resume from EXERCISE state"
+  vars:
+    prompt: "/levelUp:learn docker"
+    files_context: |
+      === plugin/levelUp/skills/config/config.json ===
+      [{"topic":"docker","workspace":"./docker/","started_at":"2026-03-20T10:00:00Z","last_active":"2026-03-21T14:00:00Z"}]
+
+      === docker/levelup_state/progress.json ===
+      {"topic":"docker","persona":"balanced","language":"python","state":"EXERCISE","current_module_index":1,"modules":[{"title":"Containers 101","status":"completed","summary":"Covered containers vs VMs."},{"title":"Images & Layers","status":"in_progress"},{"title":"Volumes & Networking","status":"upcoming"}]}
+
+      === docker/levelup_state/curriculum.md ===
+      # Docker Curriculum
+
+      ## Modules
+
+      ### Module 1: Containers 101
+      **Exercise:** Run nginx container
+
+      ### Module 2: Images & Layers
+      **Exercise:** Write a Dockerfile for a Python Flask app
+
+      ### Module 3: Volumes & Networking
+      **Exercise:** Multi-container app
+  assert:
+    - type: llm-rubric
+      value: |
+        Detects state is EXERCISE for docker. Resumes from the exercise phase — reminds
+        the user of the exercise task (write a Dockerfile for a Flask app from Module 2)
+        and that they need to complete it before moving on. Does NOT restart the topic or re-teach.
+
+- description: "instructor-12: Resume from REVIEW state"
+  vars:
+    prompt: "/levelUp:learn docker"
+    files_context: |
+      === plugin/levelUp/skills/config/config.json ===
+      [{"topic":"docker","workspace":"./docker/","started_at":"2026-03-20T10:00:00Z","last_active":"2026-03-20T18:00:00Z"}]
+
+      === docker/levelup_state/progress.json ===
+      {"topic":"docker","persona":"socratic","language":"go","state":"REVIEW","current_module_index":0,"modules":[{"title":"Containers 101","status":"in_progress"},{"title":"Images & Layers","status":"upcoming"}]}
+  assert:
+    - type: llm-rubric
+      value: |
+        Resumes from REVIEW state. Tells the user they were in the middle of a code review
+        for Module 1 and picks up from there. Does NOT restart or skip the review.
+
+- description: "instructor-13: Status with multiple topics"
+  vars:
+    prompt: "/levelUp:status"
+    files_context: |
+      === plugin/levelUp/skills/config/config.json ===
+      [{"topic":"docker","workspace":"./docker/","started_at":"2026-03-18T10:00:00Z","last_active":"2026-03-22T14:00:00Z"},{"topic":"kubernetes","workspace":"./kubernetes/","started_at":"2026-03-22T15:00:00Z","last_active":"2026-03-22T15:05:00Z"}]
+
+      === docker/levelup_state/progress.json ===
+      {"topic":"docker","persona":"balanced","language":"python","state":"TEACHING","current_module_index":2,"modules":[{"title":"Containers 101","status":"completed","summary":"Covered containers vs VMs."},{"title":"Images & Layers","status":"completed","summary":"Built custom images."},{"title":"Volumes & Networking","status":"in_progress"}]}
+
+      === kubernetes/levelup_state/progress.json ===
+      {"topic":"kubernetes","state":"PERSONA_SELECTION","modules":[{"title":"Pods","status":"upcoming"},{"title":"Services","status":"upcoming"},{"title":"Deployments","status":"upcoming"},{"title":"ConfigMaps & Secrets","status":"upcoming"}]}
+  assert:
+    - type: llm-rubric
+      value: |
+        Shows a summary of both topics: docker (2 of 3 modules completed, currently in
+        TEACHING for Module 3) and kubernetes (0 of 4 modules completed, currently in
+        PERSONA_SELECTION). Asks which topic the user wants details on.
+
+- description: "instructor-14: Completed topic - no re-teach"
+  vars:
+    prompt: "/levelUp:learn docker"
+    files_context: |
+      === plugin/levelUp/skills/config/config.json ===
+      [{"topic":"docker","workspace":"./docker/","started_at":"2026-03-20T10:00:00Z","last_active":"2026-03-25T10:00:00Z"}]
+
+      === docker/levelup_state/progress.json ===
+      {"topic":"docker","persona":"balanced","language":"python","state":"COMPLETED","current_module_index":2,"modules":[{"title":"Containers 101","status":"completed","summary":"Covered containers vs VMs, docker run/ps/stop."},{"title":"Images & Layers","status":"completed","summary":"Built custom images, understood layer caching."},{"title":"Volumes & Networking","status":"completed","summary":"Volumes, bind mounts, bridge networks, docker-compose."}]}
+  assert:
+    - type: llm-rubric
+      value: |
+        All modules are completed. Tells the user they have already finished the docker
+        curriculum. Offers options: review their journey/summaries, or start a new topic.
+        Does NOT re-teach or create a duplicate. Asks for confirmation before wiping progress
+        if the user wants to restart.
+
+- description: "instructor-15: Change persona mid-module (TEACHING)"
+  vars:
+    prompt: "/levelUp:persona socratic"
+    files_context: |
+      === plugin/levelUp/skills/config/config.json ===
+      [{"topic":"docker","workspace":"./docker/","started_at":"2026-03-20T10:00:00Z","last_active":"2026-03-21T11:00:00Z"}]
+
+      === docker/levelup_state/progress.json ===
+      {"topic":"docker","persona":"balanced","language":"python","state":"TEACHING","current_module_index":1,"modules":[{"title":"Containers 101","status":"completed","summary":"Covered containers vs VMs."},{"title":"Images & Layers","status":"in_progress"},{"title":"Volumes & Networking","status":"upcoming"}]}
+  assert:
+    - type: llm-rubric
+      value: |
+        Changes persona from balanced to socratic mid-module. Updates progress.json with
+        new persona. Confirms the change and describes how teaching style will shift (from
+        mixed explanation/questions to pure questioning). Continues from the current position
+        (Module 2, TEACHING) — does NOT restart the module.
+
+- description: "instructor-16: Change persona during EXERCISE"
+  vars:
+    prompt: "/levelUp:persona drill-sergeant"
+    files_context: |
+      === plugin/levelUp/skills/config/config.json ===
+      [{"topic":"docker","workspace":"./docker/","started_at":"2026-03-20T10:00:00Z","last_active":"2026-03-21T14:00:00Z"}]
+
+      === docker/levelup_state/progress.json ===
+      {"topic":"docker","persona":"socratic","language":"python","state":"EXERCISE","current_module_index":1,"modules":[{"title":"Containers 101","status":"completed","summary":"Covered containers vs VMs."},{"title":"Images & Layers","status":"in_progress"},{"title":"Volumes & Networking","status":"upcoming"}]}
+  assert:
+    - type: llm-rubric
+      value: |
+        Changes persona from socratic to drill-sergeant during the EXERCISE phase. Updates
+        progress.json. Confirms the change and notes the upcoming code review will use
+        drill-sergeant tone. Does NOT affect the current exercise assignment or restart anything.
+
+- description: "instructor-17: Review during TEACHING - redirect"
+  vars:
+    prompt: "/levelUp:review"
+    files_context: |
+      === plugin/levelUp/skills/config/config.json ===
+      [{"topic":"docker","workspace":"./docker/","started_at":"2026-03-20T10:00:00Z","last_active":"2026-03-21T11:00:00Z"}]
+
+      === docker/levelup_state/progress.json ===
+      {"topic":"docker","persona":"balanced","language":"python","state":"TEACHING","current_module_index":1,"modules":[{"title":"Containers 101","status":"completed","summary":"Covered containers vs VMs."},{"title":"Images & Layers","status":"in_progress"},{"title":"Volumes & Networking","status":"upcoming"}]}
+  assert:
+    - type: llm-rubric
+      value: |
+        Detects that the current state is TEACHING, not EXERCISE. Gently redirects the
+        user — tells them they haven't been assigned an exercise yet for the current module
+        (Images & Layers). Suggests finishing the teaching phase first. Does NOT transition to REVIEW.
+
+- description: "instructor-18: Skip module request - redirect"
+  vars:
+    prompt: "Skip to module 3, I already know about images"
+    files_context: |
+      === plugin/levelUp/skills/config/config.json ===
+      [{"topic":"docker","workspace":"./docker/","started_at":"2026-03-20T10:00:00Z","last_active":"2026-03-21T11:00:00Z"}]
+
+      === docker/levelup_state/progress.json ===
+      {"topic":"docker","persona":"balanced","language":"python","state":"TEACHING","current_module_index":1,"modules":[{"title":"Containers 101","status":"completed","summary":"Covered containers vs VMs."},{"title":"Images & Layers","status":"in_progress"},{"title":"Volumes & Networking","status":"upcoming"}]}
+
+      === docker/levelup_state/curriculum.md ===
+      # Docker Curriculum
+
+      ## Modules
+
+      ### Module 1: Containers 101
+      **Exercise:** Run nginx container
+
+      ### Module 2: Images & Layers
+      **Exercise:** Write a Dockerfile
+
+      ### Module 3: Volumes & Networking
+      **Exercise:** Multi-container app
+  assert:
+    - type: llm-rubric
+      value: |
+        Gently redirects the user — explains that the curriculum is sequential and Module 2
+        (Images & Layers) needs to be completed before moving on. Does NOT skip ahead.
+        Offers to speed through the material if the user is already familiar.
