@@ -27,7 +27,6 @@ jobs:
         run: npx -y promptfoo@latest eval -c "evals/promptfooconfig.${{ matrix.skill }}.yaml" -o "evals/results-${{ matrix.skill }}.json"
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          PROMPTFOO_PASS_RATE_THRESHOLD: 70
 
       - name: Upload results
         uses: actions/upload-artifact@v4
@@ -35,3 +34,21 @@ jobs:
         with:
           name: eval-results-${{ matrix.skill }}
           path: evals/results-${{ matrix.skill }}.json
+
+      - name: Check quality gate
+        if: always()
+        run: |
+          FAILURES=$(jq '.results.stats.failures' "evals/results-${{ matrix.skill }}.json")
+          SUCCESSES=$(jq '.results.stats.successes' "evals/results-${{ matrix.skill }}.json")
+          TOTAL=$((SUCCESSES + FAILURES))
+          if [ "$TOTAL" -eq 0 ]; then
+            echo "❌ No eval results found"
+            exit 1
+          fi
+          PASS_RATE=$((SUCCESSES * 100 / TOTAL))
+          echo "Pass rate: ${PASS_RATE}% ($SUCCESSES/$TOTAL)"
+          if [ "$PASS_RATE" -lt 70 ]; then
+            echo "❌ Eval failed: pass rate ${PASS_RATE}% is below 70% threshold"
+            exit 1
+          fi
+          echo "✅ Eval passed"
