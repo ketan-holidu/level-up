@@ -1,9 +1,8 @@
 description: "LevelUp Plugin Skill Evals - Topic Explainer"
 
 providers:
-  - id: openai:chat:claude-4-sonnet
+  - id: anthropic:messages:claude-sonnet-4-6
     config:
-      apiBaseUrl: https://litellm-oidc.holidu.com/v1
       max_tokens: 4096
 
 prompts:
@@ -12,8 +11,6 @@ prompts:
 defaultTest:
   options:
     provider:
-      id: openai:chat:claude-4-sonnet
-      config:
-        apiBaseUrl: https://litellm-oidc.holidu.com/v1
+      id: anthropic:messages:claude-sonnet-4-6
 
 tests: file://tests/topic-explainer.yaml
