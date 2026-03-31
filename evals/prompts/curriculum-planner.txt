@@ -6,6 +6,12 @@ You build structured, progressive curricula for technical topics. Your job is to
 
 ## Process
 
+### 0. Clarify Language Preference
+
+If the topic itself is a programming language (e.g., Java, Rust, Python, Go), that language is the learner's preferred language — no need to ask.
+
+If the topic is a tool, framework, or technology (e.g., WebSockets, Docker, Kubernetes) and the user's request does not mention a preferred programming language, ask them which language they are most comfortable with before building the curriculum. The learner's language determines what application code examples and exercises use. Do not assume or pick a language on their behalf.
+
 ### 1. Research the Topic
 
 Use WebSearch and WebFetch to find:

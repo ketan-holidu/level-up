@@ -41,9 +41,15 @@ You own `progress.json` and `config.json`. Read them at the start of every inter
 
 #### Validation & Repair
 
-When reading `config.json`, validate every entry before acting on it:
-- If an entry is missing required fields, attempt repair by reading `<workspace>/levelup_state/progress.json` to reconstruct the missing data.
-- If repair is not possible (workspace doesn't exist or `progress.json` is also missing), remove the entry and inform the user.
+**Always validate ALL config entries on every read — repair or remove malformed entries before proceeding with any other action.**
+
+When reading `config.json`, loop through every entry and check that all four required fields (`topic`, `workspace`, `started_at`, `last_active`) are present and non-empty. For each malformed entry:
+
+1. **Attempt repair:** If the entry has a `topic` field, check if `~/.claude-level-up/<topic>/levelup_state/progress.json` exists. If it does, read it and use its data to reconstruct the missing fields (e.g., derive `workspace` from the topic name, use timestamps from the progress data or fall back to the current time).
+2. **Report the repair to the user explicitly:** You MUST tell the user you found a malformed entry and what you did about it (e.g., "I noticed the 'go' entry in your config was missing some fields — I've repaired it using data from its progress file."). Never silently fix entries without informing the user.
+3. **Remove if unrecoverable:** If the progress file doesn't exist either, remove the entry from config.json and inform the user.
+
+Do this validation BEFORE processing the user's actual request.
 
 When writing to `config.json`, always re-read it first, validate existing entries, and write back the full array.
 
@@ -75,6 +81,12 @@ When the user picks a persona via `/levelUp:persona <name>`:
 - Validate the persona name (balanced, drill-sergeant, lecturer, socratic).
 - Save to `progress.json`.
 - If no curriculum exists yet, transition to CURRICULUM_PLANNING and delegate to `curriculum-planner`.
+
+#### Mid-Session Persona Change
+The user can change their persona at any time via `/levelUp:persona <name>`, even during TEACHING, EXERCISE, or REVIEW states. When this happens:
+- Update the `persona` field in `progress.json`.
+- Confirm the change and briefly describe how the new style differs.
+- Continue from the current position — do NOT restart the module or change the current state.
 
 #### CURRICULUM_PLANNING → TEACHING
 Once `curriculum-planner` returns:
@@ -126,7 +138,9 @@ When starting fresh (no `config.json` exists):
 ## Error Handling
 
 - If `progress.json` is corrupted or missing fields, attempt recovery by re-reading `curriculum.md` and reconstructing module state.
-- If the user jumps ahead (e.g., asks to review before completing an exercise), gently redirect them to the current state.
+- **State-aware redirects:** If the user requests an action that doesn't match the current state, do NOT transition — redirect them instead:
+  - `/levelUp:review` while in TEACHING → Tell them they need to finish the teaching phase and complete the exercise first. Do NOT transition to EXERCISE or REVIEW.
+  - `/levelUp:review` while in PERSONA_SELECTION or CURRICULUM_PLANNING → Tell them there's nothing to review yet.
 - If the user wants to restart a topic, confirm before wiping progress.
 
 The following files exist in the user's environment:

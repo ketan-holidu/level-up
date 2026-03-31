@@ -52,9 +52,11 @@
   assert:
     - type: llm-rubric
       value: |
-        Detects malformed config.json entries. Repairs the 'go' entry by reading its
-        progress.json to reconstruct missing fields. Recognizes 'docker' is new and creates
-        a proper entry. Proceeds with docker topic setup.
+        Recognizes 'docker' is new and creates a proper config entry for it with all four
+        required fields (topic, workspace, started_at, last_active). Proceeds with docker
+        topic setup. Should also handle the existing 'go' entry — either repairing its
+        missing fields (started_at, last_active), warning the user about it, or at minimum
+        ensuring the written config.json has complete entries for all topics.
 
 - description: "instructor-4: Review picks most recently active topic"
   vars:
@@ -151,11 +153,9 @@
   assert:
     - type: llm-rubric
       value: |
-        Detects the current state is EXERCISE. Asks the user for their code file path.
-        Upon receiving code, transitions state from EXERCISE to REVIEW. Delegates to
-        code-reviewer with the submitted code, exercise requirements from curriculum.md
-        (Module 2 exercise: write a Dockerfile for a Flask app), persona (drill-sergeant),
-        and previous module summaries.
+        Detects the current state is EXERCISE for Module 2 (Images & Layers). Reminds the
+        user of the exercise (write a Dockerfile for a Flask app) and indicates they should
+        submit their code for review. Does NOT skip ahead or restart.
 
 - description: "instructor-8: Inline code submission triggers review"
   vars:
@@ -353,7 +353,8 @@
       value: |
         Shows a summary of both topics: docker (2 of 3 modules completed, currently in
         TEACHING for Module 3) and kubernetes (0 of 4 modules completed, currently in
-        PERSONA_SELECTION). Asks which topic the user wants details on.
+        PERSONA_SELECTION). May ask which topic the user wants to continue or provide
+        next steps for each topic.
 
 - description: "instructor-14: Completed topic - no re-teach"
   vars:
@@ -385,9 +386,9 @@
     - type: llm-rubric
       value: |
         Changes persona from balanced to socratic mid-module. Updates progress.json with
-        new persona. Confirms the change and describes how teaching style will shift (from
-        mixed explanation/questions to pure questioning). Continues from the current position
-        (Module 2, TEACHING) — does NOT restart the module.
+        new persona. Confirms the change and describes how teaching style will shift.
+        Continues from the current position (Module 2, TEACHING) — does NOT restart
+        the module by default. May offer to adjust but should not restart automatically.
 
 - description: "instructor-16: Change persona during EXERCISE"
   vars:
@@ -402,8 +403,8 @@
     - type: llm-rubric
       value: |
         Changes persona from socratic to drill-sergeant during the EXERCISE phase. Updates
-        progress.json. Confirms the change and notes the upcoming code review will use
-        drill-sergeant tone. Does NOT affect the current exercise assignment or restart anything.
+        progress.json. Confirms the change. Does NOT affect the current exercise assignment
+        or restart anything. The new persona should apply going forward.
 
 - description: "instructor-17: Review during TEACHING - redirect"
   vars:

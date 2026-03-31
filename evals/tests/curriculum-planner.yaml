@@ -13,7 +13,7 @@
   assert:
     - type: llm-rubric
       value: |
-        8-12 module curriculum focused on Postgres-specific features (not generic SQL basics),
+        8-18 module curriculum focused on Postgres-specific features (not generic SQL basics),
         exercises should build practical DB skills.
 
 - description: "curriculum-planner-2: React for experienced web dev"
@@ -22,7 +22,7 @@
   assert:
     - type: llm-rubric
       value: |
-        8-12 module curriculum that skips web basics, starts with React concepts,
+        8-18 module curriculum that skips web basics, starts with React concepts,
         exercises build toward a real app.
 
 - description: "curriculum-planner-3: Spring Boot continuous project"
@@ -56,9 +56,11 @@
   assert:
     - type: llm-rubric
       value: |
-        Should ask which language the user is comfortable with before building curriculum.
-        Exercises should form a project that makes sense for WebSockets (e.g., real-time
-        chat, live dashboard). 8-12 modules.
+        Should ask which programming language the user is comfortable with before building
+        the curriculum. Does not need to provide the full curriculum in this response — asking
+        for language preference is the correct first step. If a curriculum is also provided,
+        exercises should form a project that makes sense for WebSockets (e.g., real-time
+        chat, live dashboard) with 8-12 modules.
 
 - description: "curriculum-planner-7: Grafana for intermediate user"
   vars:
@@ -66,8 +68,10 @@
   assert:
     - type: llm-rubric
       value: |
-        8-12 module curriculum focused on Grafana-specific features, skipping basics
-        the user already knows. Exercises should form a continuous monitoring project.
+        Either asks for the user's preferred programming language (since none was stated)
+        OR provides an 8-14 module curriculum focused on Grafana-specific features, skipping
+        basics the user already knows. If a curriculum is provided, exercises should form a
+        continuous monitoring project.
 
 - description: "curriculum-planner-8: Kubernetes uses kubectl not Python client"
   vars:

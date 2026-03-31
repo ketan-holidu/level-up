@@ -34,7 +34,7 @@
 - description: "code-reviewer-1: React useEffect missing dependency"
   vars:
     prompt: |
-      Review my exercise submission. **Exercise:** Create a React component that fetches user data from an API on mount and displays it. Handle loading and error states. **Persona:** lecturer
+      Review my exercise submission. **Exercise:** Create a React component that fetches user data from an API whenever the userId prop changes and displays it. Handle loading and error states. **Persona:** lecturer
 
       ```jsx
       import { useState, useEffect } from 'react';
